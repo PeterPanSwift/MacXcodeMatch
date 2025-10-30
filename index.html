@@ -954,17 +954,13 @@
                     if (recommendedXcode) {
                         if (isUserMacOSTooNew) {
                             // User's macOS is too new - recommend newer Xcode
-                            alternativeMessage = `                    let alternativeMessage = '';
-                    if (recommendedXcode) {
-                        if (isUserMacOSTooNew) {
-                            // User's macOS is too new - recommend newer Xcode
-                            alternativeMessage = `< p style = "color: #78350f; margin: 0.75rem 0 0 0; line-height: 1.6; background: rgba(254, 243, 199, 0.3); padding: 0.75rem; border-radius: 8px;" >
-                                <strong>💡 Solution:</strong> Your ${ macModel } supports macOS ${ userMacOSVersion }. You can use Xcode ${ recommendedXcode } instead!
-                            </p > `;
+                            alternativeMessage = `<p style="color: #78350f; margin: 0.75rem 0 0 0; line-height: 1.6; background: rgba(254, 243, 199, 0.3); padding: 0.75rem; border-radius: 8px;">
+                                <strong>💡 Solution:</strong> Your ${macModel} supports macOS ${userMacOSVersion}. You can use Xcode ${recommendedXcode} instead!
+                            </p>`;
                         } else if (maxSupportedMacOS) {
                             // Mac hardware is too old - show Option 1
                             alternativeMessage = `
-                                < div style = "margin-top: 1rem;" >
+                                <div style="margin-top: 1rem;">
                                     <div style="background: rgba(254, 243, 199, 0.5); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
                                         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
                                             <span style="font-size: 1.3rem;">🔧</span>
@@ -974,10 +970,10 @@
                                             Your ${macModel} supports up to <strong>macOS ${maxSupportedMacOS}</strong>. You can use <strong>Xcode ${recommendedXcode}</strong> with this macOS version.
                                         </p>
                                     </div>
-                                </div >
-                                `;
+                                </div>
+                            `;
                         }
-                    }`;
+                    }
                         } else {
                             // Mac hardware is too old - show both alternatives
                             alternativeMessage = `
@@ -997,7 +993,7 @@
 
                     // Only show compatible Macs recommendation if hardware is too old (not if macOS is too new)
                     let compatibleMacsHTML = '';
-                            `;
+                    `;
                         }
                     }
 
@@ -1100,39 +1096,39 @@
                 <p style="font-size: 1.1rem; margin-bottom: 1rem;">${message}</p>
                 <p style="font-style: italic; opacity: 0.8; margin-bottom: 1.5rem;">${storyText}</p>
                 ${upgradeHTML}
-                <div class="details">
-                    <h3>📋 Taming Details</h3>
-                    <div class="info-row">
-                        <span class="label">Your Mac</span>
-                        <span class="value">${macModel}</span>
-                    </div>
-                    ${userMacOSVersion ? `
+                    <div class="details">
+                        <h3>📋 Taming Details</h3>
+                        <div class="info-row">
+                            <span class="label">Your Mac</span>
+                            <span class="value">${macModel}</span>
+                        </div>
+                        ${userMacOSVersion ? `
                     <div class="info-row">
                         <span class="label">Your macOS Version</span>
                         <span class="value">macOS ${userMacOSVersion}</span>
                     </div>
                     ` : ''}
-                    <div class="info-row">
-                        <span class="label">Xcode to Tame</span>
-                        <span class="value">${xcode.xcode_version}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">Requires macOS</span>
-                        <span class="value">${xcode.macos_version}</span>
-                    </div>
-                    ${!userMacOSVersion ? `
+                        <div class="info-row">
+                            <span class="label">Xcode to Tame</span>
+                            <span class="value">${xcode.xcode_version}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Requires macOS</span>
+                            <span class="value">${xcode.macos_version}</span>
+                        </div>
+                        ${!userMacOSVersion ? `
                     <div class="info-row">
                         <span class="label">Your Mac Supports</span>
                         <span class="value">macOS ${supportedMacOS.join(', ')}</span>
                     </div>
                     ` : ''}
-                    ${!compatible && maxSupportedMacOS ? `
+                        ${!compatible && maxSupportedMacOS ? `
                     <div class="info-row" style="background: #fef3c7; padding: 0.8rem; border-radius: 8px; margin-top: 0.5rem;">
                         <span class="label" style="color: #92400e;">📱 Latest macOS for Your Mac</span>
                         <span class="value" style="color: #92400e; font-weight: 700;">macOS ${maxSupportedMacOS}</span>
                     </div>
                     ` : ''}
-                    ${!compatible && recommendedXcode ? `
+                        ${!compatible && recommendedXcode ? `
                     <div class="info-row" style="background: #fef3c7; padding: 0.8rem; border-radius: 8px; margin-top: 0.5rem;">
                         <span class="label" style="color: #92400e;">🔨 Latest Xcode for Your Mac</span>
                         <span class="value" style="color: #92400e; font-weight: 700;">Xcode ${recommendedXcode}</span>

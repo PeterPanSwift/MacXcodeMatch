@@ -917,7 +917,7 @@
                 } else if (!canUpgradeToWork) {
                     // Cannot upgrade to work
                     // Check if user's macOS is too new or Mac hardware is too old
-                    const userMacOSMajor = parseInt(userMacOSVersion.split('.')[0]);
+                    const userMacOSMajor = userMacOSVersion ? parseInt(userMacOSVersion.split('.')[0]) : 0;
                     const req = parseVersion(xcode.macos_version);
                     let isUserMacOSTooNew = false;
 

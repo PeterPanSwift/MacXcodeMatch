@@ -820,6 +820,21 @@
                 compatible = supportedMacOSVersions.some(macOS =>
                     isVersionInRange(macOS, xcode.macos_version)
                 );
+
+                // If not compatible, find max supported macOS and recommended Xcode for this Mac
+                if (!compatible) {
+                    maxSupportedMacOS = supportedMacOSVersions.reduce((max, ver) => {
+                        return compareVersions(ver, max) > 0 ? ver : max;
+                    }, supportedMacOSVersions[0]);
+
+                    // Find the latest Xcode that works with max supported macOS
+                    for (const xcodeRelease of xcodeData) {
+                        if (isVersionInRange(maxSupportedMacOS, xcodeRelease.macos_version)) {
+                            recommendedXcode = xcodeRelease.xcode_version;
+                            break; // xcodeData is sorted newest first
+                        }
+                    }
+                }
             }
 
             // Find compatible Mac models for this Xcode (when showing purchase recommendation)
@@ -1063,6 +1078,18 @@
                     <div class="info-row">
                         <span class="label">Your Mac Supports</span>
                         <span class="value">macOS ${supportedMacOS.join(', ')}</span>
+                    </div>
+                    ` : ''}
+                    ${!compatible && maxSupportedMacOS ? `
+                    <div class="info-row" style="background: #fef3c7; padding: 0.8rem; border-radius: 8px; margin-top: 0.5rem;">
+                        <span class="label" style="color: #92400e;">📱 Latest macOS for Your Mac</span>
+                        <span class="value" style="color: #92400e; font-weight: 700;">macOS ${maxSupportedMacOS}</span>
+                    </div>
+                    ` : ''}
+                    ${!compatible && recommendedXcode ? `
+                    <div class="info-row" style="background: #fef3c7; padding: 0.8rem; border-radius: 8px; margin-top: 0.5rem;">
+                        <span class="label" style="color: #92400e;">🔨 Latest Xcode for Your Mac</span>
+                        <span class="value" style="color: #92400e; font-weight: 700;">Xcode ${recommendedXcode}</span>
                     </div>
                     ` : ''}
                     </div>

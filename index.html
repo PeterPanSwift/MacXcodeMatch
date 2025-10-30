@@ -549,6 +549,9 @@
         }
 
         function compareVersions(v1, v2) {
+            // Validate inputs
+            if (!v1 || !v2) return 0;
+            
             // Convert version numbers to arrays for comparison
             const parts1 = v1.replace('x', '99').split('.').map(Number);
             const parts2 = v2.replace('x', '99').split('.').map(Number);
@@ -563,6 +566,9 @@
         }
 
         function isVersionInRange(macOS, xcodeRequirement) {
+            // Validate inputs
+            if (!macOS || !xcodeRequirement) return false;
+            
             const req = parseVersion(xcodeRequirement);
             if (!req) return false;
 

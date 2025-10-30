@@ -401,6 +401,17 @@
             </div>
 
             <div class="selection-group">
+                <label for="macOSVersionInput">🍎 macOS Version (Optional)</label>
+                <input type="text" id="macOSVersionInput" placeholder="e.g., 15.2, 14.5, 13.6"
+                    style="padding: 0.75rem 1rem; border: 2px solid #e0e7ff; border-radius: 12px; font-size: 1rem; font-family: 'Quicksand', sans-serif; width: 100%; box-sizing: border-box; transition: all 0.3s ease;"
+                    onfocus="this.style.borderColor='#667eea'; this.style.outline='none';"
+                    onblur="this.style.borderColor='#e0e7ff';">
+                <small style="color: #8b5cf6; font-size: 0.85rem; margin-top: 0.5rem; display: block;">
+                    Leave empty to check all supported versions
+                </small>
+            </div>
+
+            <div class="selection-group">
                 <label for="xcodeSelect">🔨 Select Xcode Version</label>
                 <select id="xcodeSelect">
                     <option value="">Choose an Xcode version...</option>
@@ -567,20 +578,27 @@
                 return compareVersions(macOS, req.min) >= 0;
             } else if (req.type === 'range') {
                 // For range requirements (e.g., "15.2 - 15.x")
-                // Check if Mac's macOS major version is within the range
-                const macOSMajor = macOS.split('.')[0];
-                const minMajor = req.min.split('.')[0];
-                const maxMajor = req.max.split('.')[0];
+                // macOS cannot be downgraded, so we need exact range checking
+                const macOSMajor = parseInt(macOS.split('.')[0]);
+                const minMajor = parseInt(req.min.split('.')[0]);
+                const maxMajor = parseInt(req.max.replace('x', '99').split('.')[0]);
 
-                // If major version is within range, compatible
+                // If major version is within range, check if user can upgrade to meet requirement
                 // (e.g., macOS 15 can update to 15.2 for "15.2 - 15.x")
-                if (macOSMajor >= minMajor && macOSMajor <= maxMajor) {
+                if (macOSMajor === minMajor && macOSMajor === maxMajor) {
+                    // Same major version - can upgrade within that version
                     return true;
                 }
 
-                // Otherwise check exact version range
-                return compareVersions(macOS, req.min) >= 0 &&
+                // Check exact version range (for cross-major-version ranges like "14.5 - 15.x")
+                const inRange = compareVersions(macOS, req.min) >= 0 &&
                     compareVersions(macOS, req.max) <= 0;
+
+                // Also allow if macOS is in the same major version as the range
+                // e.g., macOS 14 for "14.5 - 15.x" can be upgraded to 14.5
+                const canUpgradeToMin = macOSMajor === minMajor;
+
+                return inRange || canUpgradeToMin;
             } else if (req.type === 'exact') {
                 return compareVersions(macOS, req.version) === 0;
             }
@@ -654,6 +672,7 @@
             const macType = document.getElementById('macTypeSelect').value;
             const macYear = document.getElementById('macYearSelect').value;
             const xcodeVersion = document.getElementById('xcodeSelect').value;
+            const macOSVersionInput = document.getElementById('macOSVersionInput').value.trim();
             const resultDiv = document.getElementById('result');
 
             if (!macType || !macYear || !xcodeVersion) {
@@ -681,17 +700,149 @@
                 });
             });
 
-            // Check if any supported macOS version meets Xcode requirements
-            const compatible = supportedMacOSVersions.some(macOS =>
-                isVersionInRange(macOS, xcode.macos_version)
-            );
+            // Check compatibility
+            let compatible = false;
+            let userMacOSVersion = null;
+            let canUpgradeToWork = false;
+            let suggestedMacOSVersion = null;
+            let maxSupportedMacOS = null;
+            let recommendedXcode = null;
+
+            if (macOSVersionInput) {
+                // User specified a macOS version - check if it's supported by their Mac
+                userMacOSVersion = macOSVersionInput;
+                const isSupportedByMac = supportedMacOSVersions.some(supportedVer => {
+                    const userMajor = userMacOSVersion.split('.')[0];
+                    const supportedMajor = supportedVer.split('.')[0];
+                    return userMajor === supportedMajor;
+                });
+
+                if (!isSupportedByMac) {
+                    alert(`Warning: macOS ${userMacOSVersion} may not be supported by ${macType} (${macYear}). The Mac supports: ${supportedMacOSVersions.join(', ')}`);
+                }
+
+                // Check if user's macOS version meets Xcode requirements
+                compatible = isVersionInRange(userMacOSVersion, xcode.macos_version);
+
+                // If not compatible, check if upgrading macOS would help
+                if (!compatible) {
+                    // Parse Xcode requirements to get the range
+                    const req = parseVersion(xcode.macos_version);
+
+                    // Check if user can upgrade (not downgrade) to meet requirements
+                    // For "15.6+" or "15.2 - 15.x", user's macOS should be <= the required range
+                    let userCanUpgrade = false;
+
+                    if (req.type === 'min') {
+                        // For "15.6+", user can upgrade if their version is less than requirement
+                        userCanUpgrade = compareVersions(userMacOSVersion, req.min) < 0;
+                    } else if (req.type === 'range') {
+                        // For "15.2 - 15.x", user can upgrade if they're below the range
+                        // Cannot downgrade if user's version is above the max
+                        const userMajor = parseInt(userMacOSVersion.split('.')[0]);
+                        const maxMajor = parseInt(req.max.replace('x', '99').split('.')[0]);
+                        userCanUpgrade = compareVersions(userMacOSVersion, req.max) <= 0;
+                    } else if (req.type === 'exact') {
+                        // For exact version, can upgrade if below
+                        userCanUpgrade = compareVersions(userMacOSVersion, req.version) < 0;
+                    }
+
+                    // Check if any supported macOS version can work AND user can upgrade to it
+                    if (userCanUpgrade) {
+                        for (const supportedVer of supportedMacOSVersions) {
+                            if (isVersionInRange(supportedVer, xcode.macos_version) &&
+                                compareVersions(supportedVer, userMacOSVersion) >= 0) {
+                                canUpgradeToWork = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // If upgrading can work, determine the suggested version from Xcode requirements
+                    if (canUpgradeToWork) {
+                        if (req.type === 'min') {
+                            // For "15.6+", suggest "15.6 or later"
+                            suggestedMacOSVersion = req.min;
+                        } else if (req.type === 'range') {
+                            // For "15.2 - 15.x", suggest the minimum "15.2"
+                            suggestedMacOSVersion = req.min;
+                        } else if (req.type === 'exact') {
+                            // For exact version like "14.x", use that
+                            suggestedMacOSVersion = req.version;
+                        }
+                    } else {
+                        // Cannot upgrade to work
+                        // Check if user's macOS is newer than what Xcode supports
+                        const userMacOSMajor = parseInt(userMacOSVersion.split('.')[0]);
+                        let isUserMacOSTooNew = false;
+
+                        if (req.type === 'range') {
+                            const maxMajor = parseInt(req.max.replace('x', '99').split('.')[0]);
+                            isUserMacOSTooNew = userMacOSMajor > maxMajor;
+                        } else if (req.type === 'min') {
+                            // For min type, user should never be "too new"
+                            isUserMacOSTooNew = false;
+                        } else if (req.type === 'exact') {
+                            const reqMajor = parseInt(req.version.replace('x', '99').split('.')[0]);
+                            isUserMacOSTooNew = userMacOSMajor > reqMajor;
+                        }
+
+                        if (isUserMacOSTooNew) {
+                            // User's macOS is too new - find a newer Xcode that supports their macOS
+                            for (const xcodeRelease of xcodeData) {
+                                if (isVersionInRange(userMacOSVersion, xcodeRelease.macos_version)) {
+                                    recommendedXcode = xcodeRelease.xcode_version;
+                                    break; // xcodeData is sorted newest first
+                                }
+                            }
+                        } else {
+                            // Mac hardware is too old - find max supported macOS and compatible Xcode
+                            maxSupportedMacOS = supportedMacOSVersions.reduce((max, ver) => {
+                                return compareVersions(ver, max) > 0 ? ver : max;
+                            }, supportedMacOSVersions[0]);
+
+                            // Find the latest Xcode that works with max supported macOS
+                            for (const xcodeRelease of xcodeData) {
+                                if (isVersionInRange(maxSupportedMacOS, xcodeRelease.macos_version)) {
+                                    recommendedXcode = xcodeRelease.xcode_version;
+                                    break; // xcodeData is sorted newest first
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                // No specific version - check if any supported macOS version meets Xcode requirements
+                compatible = supportedMacOSVersions.some(macOS =>
+                    isVersionInRange(macOS, xcode.macos_version)
+                );
+            }
+
+            // Find compatible Mac models for this Xcode (when showing purchase recommendation)
+            let compatibleMacs = [];
+            if (!compatible && !canUpgradeToWork) {
+                // Find which macOS versions support this Xcode
+                const requiredMacOSVersions = macOSData.filter(os =>
+                    isVersionInRange(os.os, xcode.macos_version)
+                );
+
+                // Extract supported Mac models from those macOS versions
+                const macModelSet = new Set();
+                requiredMacOSVersions.forEach(os => {
+                    os.supported_systems.forEach(mac => {
+                        macModelSet.add(mac);
+                    });
+                });
+
+                compatibleMacs = Array.from(macModelSet);
+            }
 
             const macModel = `${macType} (${macYear})`;
-            displayResult(macModel, xcode, supportedMacOSVersions, compatible);
+            displayResult(macModel, xcode, supportedMacOSVersions, compatible, userMacOSVersion, canUpgradeToWork, suggestedMacOSVersion, maxSupportedMacOS, recommendedXcode, compatibleMacs);
         }
 
         // Display result
-        function displayResult(macModel, xcode, supportedMacOS, compatible) {
+        function displayResult(macModel, xcode, supportedMacOS, compatible, userMacOSVersion, canUpgradeToWork, suggestedMacOSVersion, maxSupportedMacOS, recommendedXcode, compatibleMacs) {
             const resultDiv = document.getElementById('result');
             resultDiv.className = 'result ' + (compatible ? 'compatible' : 'incompatible');
 
@@ -701,9 +852,14 @@
                 ? `Your ${macModel} has successfully tamed Xcode ${xcode.xcode_version}!`
                 : `Your ${macModel} cannot tame Xcode ${xcode.xcode_version}...`;
 
-            const storyText = compatible
-                ? `"You become responsible, forever, for what you have tamed." Your Mac and Xcode are now bonded!`
-                : `"It is the time you have wasted for your rose that makes your rose so important." Perhaps it's time to upgrade your Mac?`;
+            let storyText = '';
+            if (compatible) {
+                storyText = `"You become responsible, forever, for what you have tamed." Your Mac and Xcode are now bonded!`;
+            } else if (canUpgradeToWork) {
+                storyText = `"It is only with the heart that one can see rightly." Your Mac can tame this Xcode by upgrading to macOS ${suggestedMacOSVersion} or later!`;
+            } else {
+                storyText = `"It is the time you have wasted for your rose that makes your rose so important." Perhaps it's time to upgrade your Mac?`;
+            }
 
             let sdksHTML = '';
             if (Object.keys(xcode.sdks).length > 0) {
@@ -719,17 +875,178 @@
                 sdksHTML += '</div>';
             }
 
+            // Show user's specific macOS version if provided
+            const macOSVersionDisplay = userMacOSVersion
+                ? `macOS ${userMacOSVersion}`
+                : `macOS ${supportedMacOS.join(', ')}`;
+
+            // Upgrade suggestion HTML
+            let upgradeHTML = '';
+            if (!compatible) {
+                if (canUpgradeToWork && userMacOSVersion && suggestedMacOSVersion) {
+                    // User can upgrade macOS to make it work
+                    const req = parseVersion(xcode.macos_version);
+                    let upgradeMessage = '';
+
+                    if (req.type === 'min') {
+                        // For "15.6+" type requirements
+                        upgradeMessage = `Your Mac can tame Xcode ${xcode.xcode_version} by upgrading to macOS ${suggestedMacOSVersion} or later.`;
+                    } else if (req.type === 'range') {
+                        // For "15.2 - 15.x" type requirements
+                        upgradeMessage = `Your Mac can tame Xcode ${xcode.xcode_version} by upgrading to macOS ${suggestedMacOSVersion} or later.`;
+                    } else {
+                        // For exact version requirements
+                        upgradeMessage = `Your Mac can tame Xcode ${xcode.xcode_version} by upgrading to macOS ${suggestedMacOSVersion}.`;
+                    }
+
+                    upgradeHTML = `
+                        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 1rem; border-radius: 12px; margin: 1.5rem 0; border-left: 4px solid #f59e0b;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <span style="font-size: 1.5rem;">💡</span>
+                                <strong style="color: #92400e;">Good News!</strong>
+                            </div>
+                            <p style="color: #78350f; margin: 0; line-height: 1.6;">
+                                ${upgradeMessage}
+                            </p>
+                        </div>
+                    `;
+                } else if (!canUpgradeToWork) {
+                    // Cannot upgrade to work
+                    // Check if user's macOS is too new or Mac hardware is too old
+                    const userMacOSMajor = parseInt(userMacOSVersion.split('.')[0]);
+                    const req = parseVersion(xcode.macos_version);
+                    let isUserMacOSTooNew = false;
+
+                    if (req.type === 'range') {
+                        const maxMajor = parseInt(req.max.replace('x', '99').split('.')[0]);
+                        isUserMacOSTooNew = userMacOSMajor > maxMajor;
+                    } else if (req.type === 'exact') {
+                        const reqMajor = parseInt(req.version.replace('x', '99').split('.')[0]);
+                        isUserMacOSTooNew = userMacOSMajor > reqMajor;
+                    }
+
+                    let alternativeMessage = '';
+                    if (recommendedXcode) {
+                        if (isUserMacOSTooNew) {
+                            // User's macOS is too new - recommend newer Xcode
+                            alternativeMessage = `<p style="color: #78350f; margin: 0.75rem 0 0 0; line-height: 1.6; background: rgba(254, 243, 199, 0.3); padding: 0.75rem; border-radius: 8px;">
+                                <strong>💡 Solution:</strong> Your ${macModel} supports macOS ${userMacOSVersion}. You can use Xcode ${recommendedXcode} instead!
+                            </p>`;
+                        } else {
+                            // Mac hardware is too old
+                            alternativeMessage = `<p style="color: #78350f; margin: 0.75rem 0 0 0; line-height: 1.6; background: rgba(254, 243, 199, 0.3); padding: 0.75rem; border-radius: 8px;">
+                                <strong>💡 Alternative:</strong> Your ${macModel} supports up to macOS ${maxSupportedMacOS}. You can use Xcode ${recommendedXcode} instead!
+                            </p>`;
+                        }
+                    }
+
+                    // Only show compatible Macs recommendation if hardware is too old (not if macOS is too new)
+                    let compatibleMacsHTML = '';
+                    if (!isUserMacOSTooNew && compatibleMacs && compatibleMacs.length > 0) {
+                        // Only show these 4 Mac types
+                        const macTypes = ['MacBook Air', 'MacBook Pro', 'iMac', 'Mac Mini'];
+                        const groupedMacs = {};
+
+                        macTypes.forEach(type => {
+                            const matches = compatibleMacs.filter(mac => mac.includes(type));
+                            if (matches.length > 0) {
+                                groupedMacs[type] = matches;
+                            }
+                        });
+
+                        let macList = '';
+                        for (const [type, macs] of Object.entries(groupedMacs)) {
+                            // Extract year/chip info and find the earliest requirement
+                            const yearInfos = macs.map(mac => {
+                                const match = mac.match(/\(([^)]+)\)/);
+                                return match ? match[1] : null;
+                            }).filter(info => info !== null);
+
+                            // Deduplicate and find the most permissive requirement
+                            const uniqueInfos = new Set();
+                            yearInfos.forEach(info => {
+                                // If it's "or later", extract the year
+                                const orLaterMatch = info.match(/^(\d{4}|M\d+) or later$/);
+                                if (orLaterMatch) {
+                                    uniqueInfos.add(info);
+                                } else {
+                                    uniqueInfos.add(info);
+                                }
+                            });
+
+                            // Sort to get the earliest year requirement
+                            const sortedInfos = Array.from(uniqueInfos).sort((a, b) => {
+                                // Extract years for comparison
+                                const yearA = a.match(/(\d{4})/);
+                                const yearB = b.match(/(\d{4})/);
+                                if (yearA && yearB) {
+                                    return parseInt(yearA[1]) - parseInt(yearB[1]);
+                                }
+                                return 0;
+                            });
+
+                            // Use only the earliest requirement
+                            const displayInfo = sortedInfos[0] || yearInfos[0];
+                            macList += `<div style="margin: 0.25rem 0;"><strong>${type}:</strong> ${displayInfo}</div>`;
+                        }
+
+                        compatibleMacsHTML = `
+                            <div style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(254, 243, 199, 0.3); border-radius: 8px;">
+                                <div style="color: #78350f; margin-bottom: 0.5rem;"><strong>✅ Compatible Macs:</strong></div>
+                                <div style="color: #78350f; font-size: 0.9rem; line-height: 1.5;">
+                                    ${macList}
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    // Only show "get a newer Mac" recommendation if hardware is too old
+                    let purchaseRecommendation = '';
+                    if (!isUserMacOSTooNew) {
+                        purchaseRecommendation = `
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(127, 29, 29, 0.2);">
+                                <p style="color: #7f1d1d; margin: 0 0 0.5rem 0; line-height: 1.6;">
+                                    <strong>🛍️ Recommendation:</strong> Consider getting a newer Mac to access the latest Xcode features!
+                                </p>
+                                ${compatibleMacsHTML}
+                            </div>
+                        `;
+                    }
+
+                    upgradeHTML = `
+                        <div style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); padding: 1rem; border-radius: 12px; margin: 1.5rem 0; border-left: 4px solid #dc2626;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <span style="font-size: 1.5rem;">⚠️</span>
+                                <strong style="color: #7f1d1d;">Your Mac Cannot Tame This Xcode</strong>
+                            </div>
+                            <p style="color: #7f1d1d; margin: 0; line-height: 1.6;">
+                                Your ${macModel} ${isUserMacOSTooNew ? 'with macOS ' + userMacOSVersion + ' is too new for' : 'cannot be upgraded to support'} Xcode ${xcode.xcode_version} (requires macOS ${xcode.macos_version}).
+                            </p>
+                            ${alternativeMessage}
+                            ${purchaseRecommendation}
+                        </div>
+                    `;
+                }
+            }
+
             resultDiv.innerHTML = `
                 <img src="${imageSrc}" alt="${title}" style="max-width: 300px; width: 100%; height: auto; border-radius: 15px; margin-bottom: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                 <h2>${title}</h2>
                 <p style="font-size: 1.1rem; margin-bottom: 1rem;">${message}</p>
                 <p style="font-style: italic; opacity: 0.8; margin-bottom: 1.5rem;">${storyText}</p>
+                ${upgradeHTML}
                 <div class="details">
                     <h3>📋 Taming Details</h3>
                     <div class="info-row">
                         <span class="label">Your Mac</span>
                         <span class="value">${macModel}</span>
                     </div>
+                    ${userMacOSVersion ? `
+                    <div class="info-row">
+                        <span class="label">Your macOS Version</span>
+                        <span class="value">macOS ${userMacOSVersion}</span>
+                    </div>
+                    ` : ''}
                     <div class="info-row">
                         <span class="label">Xcode to Tame</span>
                         <span class="value">${xcode.xcode_version}</span>
@@ -738,9 +1055,12 @@
                         <span class="label">Requires macOS</span>
                         <span class="value">${xcode.macos_version}</span>
                     </div>
+                    ${!userMacOSVersion ? `
                     <div class="info-row">
                         <span class="label">Your Mac Supports</span>
                         <span class="value">macOS ${supportedMacOS.join(', ')}</span>
+                    </div>
+                    ` : ''}
                     </div>
                     ${sdksHTML ? '<div style="margin-top: 1.5rem;"><h3>🛠️ Taming Tools (SDKs)</h3>' + sdksHTML + '</div>' : ''}
                 </div>

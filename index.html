@@ -954,9 +954,30 @@
                     if (recommendedXcode) {
                         if (isUserMacOSTooNew) {
                             // User's macOS is too new - recommend newer Xcode
+                            alternativeMessage = `                    let alternativeMessage = '';
+                    if (recommendedXcode) {
+                        if (isUserMacOSTooNew) {
+                            // User's macOS is too new - recommend newer Xcode
                             alternativeMessage = `<p style="color: #78350f; margin: 0.75rem 0 0 0; line-height: 1.6; background: rgba(254, 243, 199, 0.3); padding: 0.75rem; border-radius: 8px;">
                                 <strong>💡 Solution:</strong> Your ${macModel} supports macOS ${userMacOSVersion}. You can use Xcode ${recommendedXcode} instead!
                             </p>`;
+                        } else if (maxSupportedMacOS) {
+                            // Mac hardware is too old - show Option 1
+                            alternativeMessage = `
+                                <div style="margin-top: 1rem;">
+                                    <div style="background: rgba(254, 243, 199, 0.5); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                            <span style="font-size: 1.3rem;">🔧</span>
+                                            <strong style="color: #92400e; font-size: 1.05rem;">Option 1: Use Compatible Versions</strong>
+                                        </div>
+                                        <p style="color: #78350f; margin: 0; line-height: 1.6;">
+                                            Your ${macModel} supports up to <strong>macOS ${maxSupportedMacOS}</strong>. You can use <strong>Xcode ${recommendedXcode}</strong> with this macOS version.
+                                        </p>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }`;
                         } else {
                             // Mac hardware is too old - show both alternatives
                             alternativeMessage = `

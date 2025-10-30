@@ -671,6 +671,52 @@
             return latest;
         }
 
+        function normalizeDescriptors(descriptorSet) {
+            const items = Array.from(descriptorSet);
+            const laterItems = items.filter(desc => /or later/i.test(desc));
+
+            if (laterItems.length > 1) {
+                let best = laterItems[0];
+                let bestYear = best.match(/\d{4}/);
+                let bestValue = bestYear ? parseInt(bestYear[0], 10) : Infinity;
+
+                laterItems.forEach(desc => {
+                    const match = desc.match(/\d{4}/);
+                    if (!match) {
+                        return;
+                    }
+                    const year = parseInt(match[0], 10);
+                    if (year < bestValue) {
+                        best = desc;
+                        bestValue = year;
+                    }
+                });
+
+                return items.filter(desc => !/or later/i.test(desc) || desc === best);
+            }
+
+            return items;
+        }
+
+        function extractSupportType(supportString) {
+            if (!supportString) {
+                return '';
+            }
+            const cleaned = supportString.trim();
+            const parenIndex = cleaned.indexOf('(');
+            const bracketIndex = cleaned.indexOf('[');
+            let endIndex = cleaned.length;
+
+            if (parenIndex !== -1) {
+                endIndex = Math.min(endIndex, parenIndex);
+            }
+            if (bracketIndex !== -1) {
+                endIndex = Math.min(endIndex, bracketIndex);
+            }
+
+            return cleaned.substring(0, endIndex).trim();
+        }
+
         function isVersionInRange(macOS, xcodeRequirement, options = {}) {
             // Validate inputs
             if (!macOS || !xcodeRequirement) return false;
@@ -721,7 +767,18 @@
         // Check if a Mac year/chip is compatible with a support string
         function isMacCompatible(macType, macYear, supportString) {
             // Check if it's the right Mac type
-            if (!supportString.includes(macType)) {
+            const supportType = extractSupportType(supportString).toLowerCase();
+            const desiredType = macType.toLowerCase();
+
+            if (!supportType) {
+                return false;
+            }
+
+            if (desiredType === 'imac' && supportType === 'imac pro') {
+                return false;
+            }
+
+            if (supportType !== desiredType) {
                 return false;
             }
 
@@ -900,7 +957,7 @@
 
                             // Find the latest Xcode that works with max supported macOS
                             for (const xcodeRelease of xcodeData) {
-                                if (isVersionInRange(maxSupportedMacOS, xcodeRelease.macos_version)) {
+                                if (isVersionInRange(maxSupportedMacOS, xcodeRelease.macos_version, { allowMajorUpgrade: true })) {
                                     recommendedXcode = xcodeRelease.xcode_version;
                                     break; // xcodeData is sorted newest first
                                 }
@@ -920,7 +977,7 @@
 
                     // Find the latest Xcode that works with max supported macOS
                     for (const xcodeRelease of xcodeData) {
-                        if (isVersionInRange(maxSupportedMacOS, xcodeRelease.macos_version)) {
+                        if (isVersionInRange(maxSupportedMacOS, xcodeRelease.macos_version, { allowMajorUpgrade: true })) {
                             recommendedXcode = xcodeRelease.xcode_version;
                             break; // xcodeData is sorted newest first
                         }
@@ -1027,7 +1084,21 @@
                         let macList = '';
 
                         macTypes.forEach(type => {
-                            const matches = compatibleMacs.filter(mac => mac.startsWith(type));
+                            const matches = compatibleMacs.filter(mac => {
+                                const supportType = extractSupportType(mac);
+                                if (!supportType) {
+                                    return false;
+                                }
+
+                                const normalizedSupport = supportType.toLowerCase();
+                                const normalizedType = type.toLowerCase();
+
+                                if (normalizedType === 'imac' && normalizedSupport === 'imac pro') {
+                                    return false;
+                                }
+
+                                return normalizedSupport === normalizedType;
+                            });
                             if (matches.length === 0) {
                                 return;
                             }
@@ -1041,7 +1112,8 @@
                             });
 
                             if (descriptors.size > 0) {
-                                macList += `<div style="margin: 0.25rem 0;"><strong>${type}:</strong> ${Array.from(descriptors).join(', ')}</div>`;
+                                const descriptorList = normalizeDescriptors(descriptors);
+                                macList += `<div style="margin: 0.25rem 0;"><strong>${type}:</strong> ${descriptorList.join(', ')}</div>`;
                             }
                         });
 
@@ -1062,7 +1134,7 @@
 
                     if (!latestKnownXcode && latestKnownMacOS) {
                         for (const xcodeRelease of xcodeData) {
-                            if (isVersionInRange(latestKnownMacOS, xcodeRelease.macos_version)) {
+                            if (isVersionInRange(latestKnownMacOS, xcodeRelease.macos_version, { allowMajorUpgrade: true })) {
                                 latestKnownXcode = xcodeRelease.xcode_version;
                                 break;
                             }

@@ -671,7 +671,7 @@
             return latest;
         }
 
-        function isVersionInRange(macOS, xcodeRequirement) {
+        function isVersionInRange(macOS, xcodeRequirement, options = {}) {
             // Validate inputs
             if (!macOS || !xcodeRequirement) return false;
 
@@ -681,43 +681,37 @@
             const req = parseVersion(xcodeRequirement);
             if (!req) return false;
 
-            if (req.type === 'min') {
-                // For minimum version requirements (e.g., "15.6+")
-                // If Mac supports the same major version, it's compatible
-                // because user can update to the required minor version
-                const macOSMajor = macOSComparable.split('.')[0];
-                const reqMajor = req.min.split('.')[0];
+            const allowMajorUpgrade = options.allowMajorUpgrade === true;
 
-                // If major versions match, compatible (e.g., macOS 15 can update to 15.6)
-                if (macOSMajor === reqMajor) {
-                    return true;
+            if (req.type === 'min') {
+                if (allowMajorUpgrade) {
+                    const macOSMajor = macOSComparable.split('.')[0];
+                    const reqMajor = req.min.split('.')[0];
+
+                    if (macOSMajor === reqMajor) {
+                        return true;
+                    }
                 }
 
-                // Otherwise check if macOS version is >= requirement
                 return compareVersions(macOSComparable, req.min) >= 0;
             } else if (req.type === 'range') {
-                // For range requirements (e.g., "15.2 - 15.x")
-                // macOS cannot be downgraded, so we need exact range checking
-                const macOSMajor = parseInt(macOSComparable.split('.')[0]);
-                const minMajor = parseInt(req.min.split('.')[0]);
-                const maxMajor = parseInt(req.max.replace('x', '99').split('.')[0]);
-
-                // If major version is within range, check if user can upgrade to meet requirement
-                // (e.g., macOS 15 can update to 15.2 for "15.2 - 15.x")
-                if (macOSMajor === minMajor && macOSMajor === maxMajor) {
-                    // Same major version - can upgrade within that version
-                    return true;
-                }
-
-                // Check exact version range (for cross-major-version ranges like "14.5 - 15.x")
                 const inRange = compareVersions(macOSComparable, req.min) >= 0 &&
                     compareVersions(macOSComparable, req.max) <= 0;
 
-                // Also allow if macOS is in the same major version as the range
-                // e.g., macOS 14 for "14.5 - 15.x" can be upgraded to 14.5
-                const canUpgradeToMin = macOSMajor === minMajor;
+                if (inRange) {
+                    return true;
+                }
 
-                return inRange || canUpgradeToMin;
+                if (allowMajorUpgrade) {
+                    const macOSMajor = parseInt(macOSComparable.split('.')[0], 10);
+                    const minMajor = parseInt(req.min.split('.')[0], 10);
+
+                    if (!isNaN(macOSMajor) && !isNaN(minMajor) && macOSMajor === minMajor) {
+                        return true;
+                    }
+                }
+
+                return false;
             } else if (req.type === 'exact') {
                 return compareVersions(macOSComparable, req.version) === 0;
             }
@@ -859,64 +853,40 @@
                     const req = parseVersion(xcode.macos_version);
 
                     // Check if user can upgrade (not downgrade) to meet requirements
-                    // For "15.6+" or "15.2 - 15.x", user's macOS should be <= the required range
                     let userCanUpgrade = false;
+                    let userMacOSTooNew = false;
 
                     if (req.type === 'min') {
-                        // For "15.6+", user can upgrade if their version is less than requirement
                         userCanUpgrade = compareVersions(userMacOSVersion, req.min) < 0;
                     } else if (req.type === 'range') {
-                        // For "15.2 - 15.x", user can upgrade if they're below the range
-                        // Cannot downgrade if user's version is above the max
-                        const userMajor = parseInt(userMacOSVersion.split('.')[0]);
-                        const maxMajor = parseInt(req.max.replace('x', '99').split('.')[0]);
-                        userCanUpgrade = compareVersions(userMacOSVersion, req.max) <= 0;
+                        const belowMin = compareVersions(userMacOSVersion, req.min) < 0;
+                        const aboveMax = compareVersions(userMacOSVersion, req.max) > 0;
+                        userCanUpgrade = belowMin;
+                        userMacOSTooNew = aboveMax;
                     } else if (req.type === 'exact') {
-                        // For exact version, can upgrade if below
                         userCanUpgrade = compareVersions(userMacOSVersion, req.version) < 0;
+                        userMacOSTooNew = compareVersions(userMacOSVersion, req.version) > 0;
                     }
 
-                    // Check if any supported macOS version can work AND user can upgrade to it
                     if (userCanUpgrade) {
                         for (const supportedVer of supportedMacOSVersions) {
-                            if (isVersionInRange(supportedVer, xcode.macos_version) &&
-                                compareVersions(supportedVer, userMacOSVersion) >= 0) {
+                            if (isVersionInRange(supportedVer, xcode.macos_version, { allowMajorUpgrade: true })) {
                                 canUpgradeToWork = true;
                                 break;
                             }
                         }
                     }
 
-                    // If upgrading can work, determine the suggested version from Xcode requirements
                     if (canUpgradeToWork) {
                         if (req.type === 'min') {
-                            // For "15.6+", suggest "15.6 or later"
                             suggestedMacOSVersion = req.min;
                         } else if (req.type === 'range') {
-                            // For "15.2 - 15.x", suggest the minimum "15.2"
                             suggestedMacOSVersion = req.min;
                         } else if (req.type === 'exact') {
-                            // For exact version like "14.x", use that
                             suggestedMacOSVersion = req.version;
                         }
                     } else {
-                        // Cannot upgrade to work
-                        // Check if user's macOS is newer than what Xcode supports
-                        const userMacOSMajor = parseInt(userMacOSVersion.split('.')[0]);
-                        let isUserMacOSTooNew = false;
-
-                        if (req.type === 'range') {
-                            const maxMajor = parseInt(req.max.replace('x', '99').split('.')[0]);
-                            isUserMacOSTooNew = userMacOSMajor > maxMajor;
-                        } else if (req.type === 'min') {
-                            // For min type, user should never be "too new"
-                            isUserMacOSTooNew = false;
-                        } else if (req.type === 'exact') {
-                            const reqMajor = parseInt(req.version.replace('x', '99').split('.')[0]);
-                            isUserMacOSTooNew = userMacOSMajor > reqMajor;
-                        }
-
-                        if (isUserMacOSTooNew) {
+                        if (userMacOSTooNew) {
                             // User's macOS is too new - find a newer Xcode that supports their macOS
                             for (const xcodeRelease of xcodeData) {
                                 if (isVersionInRange(userMacOSVersion, xcodeRelease.macos_version)) {
@@ -941,7 +911,7 @@
             } else {
                 // No specific version - check if any supported macOS version meets Xcode requirements
                 compatible = supportedMacOSVersions.some(macOS =>
-                    isVersionInRange(macOS, xcode.macos_version)
+                    isVersionInRange(macOS, xcode.macos_version, { allowMajorUpgrade: true })
                 );
 
                 // If not compatible, find max supported macOS and recommended Xcode for this Mac
@@ -963,7 +933,7 @@
             if (!compatible && !canUpgradeToWork) {
                 // Find which macOS versions support this Xcode
                 const requiredMacOSVersions = macOSData.filter(os =>
-                    isVersionInRange(os.os, xcode.macos_version)
+                    isVersionInRange(os.os, xcode.macos_version, { allowMajorUpgrade: true })
                 );
 
                 // Extract supported Mac models from those macOS versions
@@ -1044,14 +1014,10 @@
                     `;
                 } else {
                     if (userMacOSVersion && requirement) {
-                        const userMajor = parseInt(userMacOSVersion.split('.')[0], 10);
-
                         if (requirement.type === 'range') {
-                            const maxMajor = parseInt(requirement.max.replace('x', '99').split('.')[0], 10);
-                            isUserMacOSTooNew = userMajor > maxMajor;
+                            isUserMacOSTooNew = compareVersions(userMacOSVersion, requirement.max) > 0;
                         } else if (requirement.type === 'exact') {
-                            const reqMajor = parseInt(requirement.version.replace('x', '99').split('.')[0], 10);
-                            isUserMacOSTooNew = userMajor > reqMajor;
+                            isUserMacOSTooNew = compareVersions(userMacOSVersion, requirement.version) > 0;
                         }
                     }
 

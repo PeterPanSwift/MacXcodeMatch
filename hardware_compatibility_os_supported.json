@@ -1,0 +1,123 @@
+[
+  {
+    "os": "10.8 – 10.11",
+    "supported_systems": [
+      "MacBook (Aluminum",
+      "Late 2008 or later)",
+      "MacBook Air (Late 2008 or later)",
+      "MacBook Pro (Mid 2007 or later)",
+      "Mac Mini (Early 2009 or later)",
+      "iMac (Mid 2007 or later)",
+      "Mac Pro (Early 2008 or later) Servers : Xserve (Early 2009)"
+    ]
+  },
+  {
+    "os": "10.12 – 10.13",
+    "supported_systems": [
+      "MacBook (Late 2009 or later)",
+      "MacBook Air (Late 2010 or later)",
+      "MacBook Pro (Mid 2010 or later)",
+      "Mac Mini (Mid 2010 or later)",
+      "iMac (Late 2009 or later)",
+      "iMac Pro (2017) (macOS 10.13)",
+      "Mac Pro (Mid 2010 or later)"
+    ]
+  },
+  {
+    "os": "10.14",
+    "supported_systems": [
+      "MacBook (Early 2015 or later)",
+      "MacBook Air (Mid 2012 or later)",
+      "MacBook Pro (Mid 2012 or later)",
+      "Mac Mini (Late 2012 or later)",
+      "iMac (Late 2012 or later)",
+      "iMac Pro (2017)",
+      "Mac Pro (Mid 2010 or later [ 115 ] )"
+    ]
+  },
+  {
+    "os": "10.15",
+    "supported_systems": [
+      "MacBook (Early 2015 or later)",
+      "MacBook Air (Mid 2012 or later)",
+      "MacBook Pro (Mid 2012 or later)",
+      "Mac Mini (Late 2012 or later)",
+      "iMac (Late 2012 or later)",
+      "iMac Pro (2017)",
+      "Mac Pro (Late 2013 or later)"
+    ]
+  },
+  {
+    "os": "11",
+    "supported_systems": [
+      "MacBook (Early 2015 or later)",
+      "MacBook Air (Mid 2013 or later)",
+      "MacBook Pro (Late 2013 or later)",
+      "Mac Mini (Late 2014 or later)",
+      "iMac (Mid 2014 or later)",
+      "iMac Pro (2017)",
+      "Mac Pro (Late 2013 or later)"
+    ]
+  },
+  {
+    "os": "12",
+    "supported_systems": [
+      "MacBook (Early 2016 or later)",
+      "MacBook Air (Early 2015 or later)",
+      "MacBook Pro (Early 2015 or later)",
+      "Mac Mini (Late 2014 or later)",
+      "iMac (Late 2015 or later)",
+      "iMac Pro (2017)",
+      "Mac Studio (2022)",
+      "Mac Pro (Late 2013 or later)"
+    ]
+  },
+  {
+    "os": "13",
+    "supported_systems": [
+      "MacBook (2017)",
+      "MacBook Air (2018 or later)",
+      "MacBook Pro (2017 or later)",
+      "Mac Mini (2018 or later)",
+      "iMac (2017 or later)",
+      "iMac Pro (2017)",
+      "Mac Studio (2022 or later)",
+      "Mac Pro (2019 or later)"
+    ]
+  },
+  {
+    "os": "14",
+    "supported_systems": [
+      "MacBook Air (2018 or later)",
+      "MacBook Pro (2018 or later)",
+      "Mac Mini (2018 or later)",
+      "iMac (2019 or later)",
+      "iMac Pro (2017)",
+      "Mac Studio (2022 or later)",
+      "Mac Pro (2019 or later)"
+    ]
+  },
+  {
+    "os": "15",
+    "supported_systems": [
+      "MacBook Air (2020 or later)",
+      "MacBook Pro (2018 or later)",
+      "Mac Mini (2018 or later)",
+      "iMac (2019 or later)",
+      "iMac Pro (2017)",
+      "Mac Studio (2022 or later)",
+      "Mac Pro (2019 or later)"
+    ]
+  },
+  {
+    "os": "26",
+    "supported_systems": [
+      "MacBook Air (M1 or later)",
+      "MacBook Pro (2019 or later)",
+      "Mac Mini (M1 or later)",
+      "iMac (2020 or later)",
+      "Mac Studio (2022 or later)",
+      "Mac Pro (2019 or later)"
+    ]
+  }
+]

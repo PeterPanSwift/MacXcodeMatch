@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mac × Xcode Compatibility | Asteroid B612</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Stars background */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Main container */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header section */
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header .subtitle {
+            font-size: 1.1rem;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+
+        .header .quote {
+            margin-top: 1rem;
+            font-style: italic;
+            opacity: 0.8;
+            font-size: 0.95rem;
+        }
+
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeInUp 0.8s ease-out;
+            margin-bottom: 2rem;
+        }
+
+        /* Selection group */
+        .selection-group {
+            margin-bottom: 2rem;
+        }
+
+        .selection-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.8rem;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .selection-group select {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        .selection-group select:hover {
+            border-color: #667eea;
+        }
+
+        .selection-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Button */
+        .btn {
+            width: 100%;
+            padding: 1.2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Result section */
+        .result {
+            margin-top: 2rem;
+            padding: 2rem;
+            border-radius: 15px;
+            animation: slideIn 0.5s ease-out;
+            text-align: center;
+        }
+
+        .result.compatible {
+            background: linear-gradient(135deg, #667eea15, #764ba215);
+            border: 2px solid #667eea;
+        }
+
+        .result.incompatible {
+            background: linear-gradient(135deg, #ff6b6b15, #ee5a6f15);
+            border: 2px solid #ff6b6b;
+        }
+
+        .result .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .result h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .result.compatible h2 {
+            color: #667eea;
+        }
+
+        .result.incompatible h2 {
+            color: #ff6b6b;
+        }
+
+        .result .details {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 10px;
+            text-align: left;
+        }
+
+        .result .details h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #555;
+        }
+
+        .result .details .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .result .details .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .result .details .label {
+            font-weight: 500;
+            color: #666;
+        }
+
+        .result .details .value {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .sdk-list {
+            margin-top: 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.8rem;
+        }
+
+        .sdk-item {
+            padding: 0.6rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .sdk-item .platform {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.2rem;
+        }
+
+        .sdk-item .version {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        /* Hidden element */
+        .hidden {
+            display: none;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .sdk-list {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+        }
+
+        /* Little Prince style decoration */
+        .decoration {
+            position: fixed;
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .planet {
+            position: fixed;
+            bottom: -50px;
+            right: -50px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), transparent);
+            border-radius: 50%;
+            opacity: 0.2;
+        }
+
+        /* Loading animation */
+        .loading {
+            text-align: center;
+            color: #667eea;
+            padding: 2rem;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(3, end) infinite;
+        }
+
+        @keyframes dots {
+
+            0%,
+            20% {
+                content: '.';
+            }
+
+            40% {
+                content: '..';
+            }
+
+            60%,
+            100% {
+                content: '...';
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Stars background -->
+    <div class="stars" id="stars"></div>
+
+    <!-- Planet decoration -->
+    <div class="planet"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🦊 Can Your Mac Tame Xcode?</h1>
+            <div class="subtitle">A Tale of Taming on Asteroid B612</div>
+            <div class="quote">"One only understands the things that one tames." — The Little Prince</div>
+        </div>
+
+        <!-- Main card -->
+        <div class="card">
+            <div class="selection-group">
+                <label for="macTypeSelect">💻 Select Mac Type</label>
+                <select id="macTypeSelect" onchange="updateYearOptions()">
+                    <option value="">Choose a Mac type...</option>
+                    <option value="MacBook Air">MacBook Air</option>
+                    <option value="MacBook Pro">MacBook Pro</option>
+                    <option value="iMac">iMac</option>
+                    <option value="Mac Mini">Mac Mini</option>
+                </select>
+            </div>
+
+            <div class="selection-group">
+                <label for="macYearSelect">📅 Select Year/Chip</label>
+                <select id="macYearSelect" disabled>
+                    <option value="">Choose a year/chip...</option>
+                </select>
+            </div>
+
+            <div class="selection-group">
+                <label for="xcodeSelect">🔨 Select Xcode Version</label>
+                <select id="xcodeSelect">
+                    <option value="">Choose an Xcode version...</option>
+                </select>
+            </div>
+
+            <button class="btn" onclick="checkCompatibility()">
+                🦊 Try to Tame
+            </button>
+
+            <!-- Result section -->
+            <div id="result" class="hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        let macOSData = [];
+        let xcodeData = [];
+
+        // Mac configurations (newest to oldest)
+        const macConfigs = {
+            'MacBook Air': ['M4', 'M3', 'M2', 'M1', '2020', '2019', '2018', '2017', '2016', '2015'],
+            'MacBook Pro': ['M5', 'M4', 'M3', 'M2', 'M1', '2020', '2019', '2018', '2017', '2016', '2015'],
+            'iMac': ['M4', 'M3', 'M1', '2020', '2019', '2018', '2017', '2016', '2015'],
+            'Mac Mini': ['M4', 'M2', 'M1', '2018']
+        };
+
+        // Create stars
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = Math.random() * 3 + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // Update year options based on selected Mac type
+        function updateYearOptions() {
+            const macType = document.getElementById('macTypeSelect').value;
+            const yearSelect = document.getElementById('macYearSelect');
+
+            // Clear previous options
+            yearSelect.innerHTML = '<option value="">Choose a year/chip...</option>';
+
+            if (!macType) {
+                yearSelect.disabled = true;
+                return;
+            }
+
+            yearSelect.disabled = false;
+            const years = macConfigs[macType] || [];
+
+            years.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            });
+        }
+
+        // Convert user selection to match JSON format
+        function getMacModelPattern(macType, year) {
+            // Handle year-based models
+            if (!isNaN(year)) {
+                // For numeric years, we need to match patterns like "MacBook Air (2018 or later)"
+                return `${macType} (${year}`;
+            } else {
+                // For chip-based models (M1, M2, etc.)
+                return `${macType} (${year}`;
+            }
+        }
+
+        // Load data
+        async function loadData() {
+            try {
+                const [macResponse, xcodeResponse] = await Promise.all([
+                    fetch('hardware_compatibility_os_supported.json'),
+                    fetch('xcode_releases.json')
+                ]);
+
+                macOSData = await macResponse.json();
+                xcodeData = await xcodeResponse.json();
+
+                populateSelects();
+            } catch (error) {
+                console.error('Failed to load data:', error);
+                alert('Unable to load data. Please ensure JSON files exist.');
+            }
+        }
+
+        // Populate select dropdowns
+        function populateSelects() {
+            const xcodeSelect = document.getElementById('xcodeSelect');
+
+            // Populate Xcode versions
+            xcodeData.forEach(xcode => {
+                const option = document.createElement('option');
+                option.value = xcode.xcode_version;
+                option.textContent = `Xcode ${xcode.xcode_version}`;
+                xcodeSelect.appendChild(option);
+            });
+        }
+
+        // Version comparison functions
+        function parseVersion(versionStr) {
+            // Handle formats: "15.6+", "14.5 - 15.x", "14.x", etc.
+            if (!versionStr) return null;
+
+            if (versionStr.includes('+')) {
+                // "15.6+" means >= 15.6
+                const min = versionStr.replace('+', '').trim();
+                return { type: 'min', min: min };
+            } else if (versionStr.includes('-')) {
+                // "14.5 - 15.x" means range
+                const parts = versionStr.split('-').map(p => p.trim());
+                return { type: 'range', min: parts[0], max: parts[1] };
+            } else if (versionStr.includes('x')) {
+                // "14.x" means 14.0 - 14.99
+                const major = versionStr.replace('.x', '').trim();
+                return { type: 'range', min: major + '.0', max: major + '.99' };
+            } else {
+                // Single version
+                return { type: 'exact', version: versionStr };
+            }
+        }
+
+        function compareVersions(v1, v2) {
+            // Convert version numbers to arrays for comparison
+            const parts1 = v1.replace('x', '99').split('.').map(Number);
+            const parts2 = v2.replace('x', '99').split('.').map(Number);
+
+            for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+                const p1 = parts1[i] || 0;
+                const p2 = parts2[i] || 0;
+                if (p1 > p2) return 1;
+                if (p1 < p2) return -1;
+            }
+            return 0;
+        }
+
+        function isVersionInRange(macOS, xcodeRequirement) {
+            const req = parseVersion(xcodeRequirement);
+            if (!req) return false;
+
+            if (req.type === 'min') {
+                // For minimum version requirements (e.g., "15.6+")
+                // If Mac supports the same major version, it's compatible
+                // because user can update to the required minor version
+                const macOSMajor = macOS.split('.')[0];
+                const reqMajor = req.min.split('.')[0];
+
+                // If major versions match, compatible (e.g., macOS 15 can update to 15.6)
+                if (macOSMajor === reqMajor) {
+                    return true;
+                }
+
+                // Otherwise check if macOS version is >= requirement
+                return compareVersions(macOS, req.min) >= 0;
+            } else if (req.type === 'range') {
+                // For range requirements (e.g., "15.2 - 15.x")
+                // Check if Mac's macOS major version is within the range
+                const macOSMajor = macOS.split('.')[0];
+                const minMajor = req.min.split('.')[0];
+                const maxMajor = req.max.split('.')[0];
+
+                // If major version is within range, compatible
+                // (e.g., macOS 15 can update to 15.2 for "15.2 - 15.x")
+                if (macOSMajor >= minMajor && macOSMajor <= maxMajor) {
+                    return true;
+                }
+
+                // Otherwise check exact version range
+                return compareVersions(macOS, req.min) >= 0 &&
+                    compareVersions(macOS, req.max) <= 0;
+            } else if (req.type === 'exact') {
+                return compareVersions(macOS, req.version) === 0;
+            }
+            return false;
+        }
+
+        // Check if a Mac year/chip is compatible with a support string
+        function isMacCompatible(macType, macYear, supportString) {
+            // Check if it's the right Mac type
+            if (!supportString.includes(macType)) {
+                return false;
+            }
+
+            // Check for M-series chips
+            if (macYear.startsWith('M')) {
+                // M-series Macs: M1 (2020), M2 (2022), M3 (2023), M4 (2024), M5 (2025)
+                const chipNumber = parseInt(macYear.substring(1));
+
+                // Check for "M1 or later" pattern
+                if (supportString.includes('M1 or later') || supportString.includes('M1,')) {
+                    return true; // All M-series are compatible
+                }
+
+                // Check for specific M-series mention
+                for (let i = 1; i <= chipNumber; i++) {
+                    if (supportString.includes(`M${i}`)) {
+                        return true;
+                    }
+                }
+
+                // Check for year-based compatibility
+                // M1: 2020, M2: 2022, M3: 2023, M4: 2024, M5: 2025
+                const chipYearMap = { 'M1': 2020, 'M2': 2022, 'M3': 2023, 'M4': 2024, 'M5': 2025 };
+                const macYearEquivalent = chipYearMap[macYear];
+
+                // Extract year from "2018 or later" pattern
+                const yearMatch = supportString.match(/\((\d{4}) or later\)/);
+                if (yearMatch) {
+                    const requiredYear = parseInt(yearMatch[1]);
+                    return macYearEquivalent >= requiredYear;
+                }
+
+                // Extract specific year like "(2020)"
+                const specificYearMatch = supportString.match(/\((\d{4})\)/);
+                if (specificYearMatch && !supportString.includes('or later')) {
+                    const specificYear = parseInt(specificYearMatch[1]);
+                    return macYearEquivalent >= specificYear;
+                }
+            } else {
+                // Numeric year
+                const year = parseInt(macYear);
+
+                // Check for exact match
+                if (supportString.includes(`(${macYear})`)) {
+                    return true;
+                }
+
+                // Check for "YYYY or later" pattern
+                const yearMatch = supportString.match(/\((\d{4}) or later\)/);
+                if (yearMatch) {
+                    const requiredYear = parseInt(yearMatch[1]);
+                    return year >= requiredYear;
+                }
+            }
+
+            return false;
+        }
+
+        // Check compatibility
+        function checkCompatibility() {
+            const macType = document.getElementById('macTypeSelect').value;
+            const macYear = document.getElementById('macYearSelect').value;
+            const xcodeVersion = document.getElementById('xcodeSelect').value;
+            const resultDiv = document.getElementById('result');
+
+            if (!macType || !macYear || !xcodeVersion) {
+                alert('Please select Mac type, year/chip, and Xcode version');
+                return;
+            }
+
+            // Find selected Xcode info
+            const xcode = xcodeData.find(x => x.xcode_version === xcodeVersion);
+            if (!xcode) {
+                alert('Xcode information not found');
+                return;
+            }
+
+            // Find all macOS versions that support this Mac
+            const supportedMacOSVersions = [];
+
+            macOSData.forEach(os => {
+                os.supported_systems.forEach(mac => {
+                    if (isMacCompatible(macType, macYear, mac)) {
+                        if (!supportedMacOSVersions.includes(os.os)) {
+                            supportedMacOSVersions.push(os.os);
+                        }
+                    }
+                });
+            });
+
+            // Check if any supported macOS version meets Xcode requirements
+            const compatible = supportedMacOSVersions.some(macOS =>
+                isVersionInRange(macOS, xcode.macos_version)
+            );
+
+            const macModel = `${macType} (${macYear})`;
+            displayResult(macModel, xcode, supportedMacOSVersions, compatible);
+        }
+
+        // Display result
+        function displayResult(macModel, xcode, supportedMacOS, compatible) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result ' + (compatible ? 'compatible' : 'incompatible');
+
+            const imageSrc = compatible ? 'tameOk.png' : 'tameFailed.png';
+            const title = compatible ? '🎉 Successfully Tamed!' : '💔 Failed to Tame';
+            const message = compatible
+                ? `Your ${macModel} has successfully tamed Xcode ${xcode.xcode_version}!`
+                : `Your ${macModel} cannot tame Xcode ${xcode.xcode_version}...`;
+
+            const storyText = compatible
+                ? `"You become responsible, forever, for what you have tamed." Your Mac and Xcode are now bonded!`
+                : `"It is the time you have wasted for your rose that makes your rose so important." Perhaps it's time to upgrade your Mac?`;
+
+            let sdksHTML = '';
+            if (Object.keys(xcode.sdks).length > 0) {
+                sdksHTML = '<div class="sdk-list">';
+                for (const [platform, version] of Object.entries(xcode.sdks)) {
+                    sdksHTML += `
+                        <div class="sdk-item">
+                            <div class="platform">${platform}</div>
+                            <div class="version">${version}</div>
+                        </div>
+                    `;
+                }
+                sdksHTML += '</div>';
+            }
+
+            resultDiv.innerHTML = `
+                <img src="${imageSrc}" alt="${title}" style="max-width: 300px; width: 100%; height: auto; border-radius: 15px; margin-bottom: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <h2>${title}</h2>
+                <p style="font-size: 1.1rem; margin-bottom: 1rem;">${message}</p>
+                <p style="font-style: italic; opacity: 0.8; margin-bottom: 1.5rem;">${storyText}</p>
+                <div class="details">
+                    <h3>📋 Taming Details</h3>
+                    <div class="info-row">
+                        <span class="label">Your Mac</span>
+                        <span class="value">${macModel}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Xcode to Tame</span>
+                        <span class="value">${xcode.xcode_version}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Requires macOS</span>
+                        <span class="value">${xcode.macos_version}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Your Mac Supports</span>
+                        <span class="value">macOS ${supportedMacOS.join(', ')}</span>
+                    </div>
+                    ${sdksHTML ? '<div style="margin-top: 1.5rem;"><h3>🛠️ Taming Tools (SDKs)</h3>' + sdksHTML + '</div>' : ''}
+                </div>
+            `;
+
+            resultDiv.classList.remove('hidden');
+        }
+
+        // Initialize
+        createStars();
+        loadData();
+    </script>
+</body>
+
+</html>

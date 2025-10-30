@@ -1,0 +1,212 @@
+[
+  {
+    "xcode_version": "26.1",
+    "macos_version": "15.6+",
+    "sdks": {
+      "iOS": "26.1",
+      "tvOS": "26.1",
+      "watchOS": "26.1",
+      "visionOS": "26.1",
+      "macOS": "26.1",
+      "DriverKit": "25.1"
+    }
+  },
+  {
+    "xcode_version": "26.0.1",
+    "macos_version": "15.6+",
+    "sdks": {
+      "iOS": "26",
+      "tvOS": "26",
+      "watchOS": "26",
+      "visionOS": "26",
+      "macOS": "26",
+      "DriverKit": "25"
+    }
+  },
+  {
+    "xcode_version": "26",
+    "macos_version": "15.6+",
+    "sdks": {
+      "iOS": "26",
+      "tvOS": "26",
+      "watchOS": "26",
+      "visionOS": "26",
+      "macOS": "26",
+      "DriverKit": "25"
+    }
+  },
+  {
+    "xcode_version": "16.4",
+    "macos_version": "15.3+",
+    "sdks": {
+      "iOS": "18.5",
+      "tvOS": "18.5",
+      "watchOS": "11.5",
+      "visionOS": "2.5",
+      "macOS": "15.5",
+      "DriverKit": "24.5"
+    }
+  },
+  {
+    "xcode_version": "16.3",
+    "macos_version": "15.2 - 15.x",
+    "sdks": {
+      "iOS": "18.4",
+      "tvOS": "18.4",
+      "watchOS": "11.4",
+      "visionOS": "2.4",
+      "macOS": "15.4",
+      "DriverKit": "24.4"
+    }
+  },
+  {
+    "xcode_version": "16.2",
+    "macos_version": "14.5 - 15.x",
+    "sdks": {
+      "iOS": "18.2",
+      "tvOS": "18.2",
+      "watchOS": "11.2",
+      "visionOS": "2.2",
+      "macOS": "15.2",
+      "DriverKit": "24.2"
+    }
+  },
+  {
+    "xcode_version": "16.1",
+    "macos_version": "14.5 - 15.x",
+    "sdks": {
+      "iOS": "18.1",
+      "tvOS": "18.1",
+      "watchOS": "11.1",
+      "visionOS": "2.1",
+      "macOS": "15.1",
+      "DriverKit": "24.1"
+    }
+  },
+  {
+    "xcode_version": "16",
+    "macos_version": "14.5 - 15.x",
+    "sdks": {
+      "iOS": "18",
+      "tvOS": "18",
+      "watchOS": "11",
+      "visionOS": "2",
+      "macOS": "15",
+      "DriverKit": "24"
+    }
+  },
+  {
+    "xcode_version": "15.4",
+    "macos_version": "14.x",
+    "sdks": {
+      "iOS": "17.5",
+      "tvOS": "17.5",
+      "watchOS": "10.5",
+      "visionOS": "1.2",
+      "macOS": "14.5",
+      "DriverKit": "23.5"
+    }
+  },
+  {
+    "xcode_version": "15.3",
+    "macos_version": "14.x",
+    "sdks": {
+      "iOS": "17.4",
+      "tvOS": "17.4",
+      "watchOS": "10.4",
+      "visionOS": "1",
+      "macOS": "14.4",
+      "DriverKit": "23.4"
+    }
+  },
+  {
+    "xcode_version": "15.2",
+    "macos_version": "13.5 - 14.x",
+    "sdks": {
+      "iOS": "17.2",
+      "tvOS": "17.2",
+      "watchOS": "10.2",
+      "visionOS": "1",
+      "macOS": "14.2",
+      "DriverKit": "23.2"
+    }
+  },
+  {
+    "xcode_version": "15.1",
+    "macos_version": "13.5 - 14.x",
+    "sdks": {
+      "iOS": "17.2",
+      "tvOS": "17.2",
+      "watchOS": "10.2",
+      "visionOS": "1",
+      "macOS": "14.2",
+      "DriverKit": "23.2"
+    }
+  },
+  {
+    "xcode_version": "15.0",
+    "macos_version": "13.5 - 14.x",
+    "sdks": {
+      "iOS": "17",
+      "tvOS": "17",
+      "watchOS": "10",
+      "macOS": "14",
+      "DriverKit": "23"
+    }
+  },
+  {
+    "xcode_version": "14.3.1",
+    "macos_version": "13.x",
+    "sdks": {
+      "iOS": "16.4",
+      "tvOS": "16.4",
+      "watchOS": "9.4",
+      "macOS": "13.3",
+      "DriverKit": "22.4"
+    }
+  },
+  {
+    "xcode_version": "14.3",
+    "macos_version": "13.x",
+    "sdks": {
+      "iOS": "16.4",
+      "tvOS": "16.4",
+      "watchOS": "9.4",
+      "macOS": "13.3",
+      "DriverKit": "22.4"
+    }
+  },
+  {
+    "xcode_version": "14.2",
+    "macos_version": "12.5 - 13.x",
+    "sdks": {
+      "iOS": "16.2",
+      "tvOS": "16.1",
+      "watchOS": "9.1",
+      "macOS": "13.1",
+      "DriverKit": "22.2"
+    }
+  },
+  {
+    "xcode_version": "14.1",
+    "macos_version": "12.5 - 13.x",
+    "sdks": {
+      "iOS": "16.1",
+      "tvOS": "16.1",
+      "watchOS": "9.1",
+      "macOS": "13",
+      "DriverKit": "22.1"
+    }
+  },
+  {
+    "xcode_version": "14.0",
+    "macos_version": "12.5 - 13.x",
+    "sdks": {
+      "iOS": "16",
+      "tvOS": "16",
+      "watchOS": "9",
+      "macOS": "12.3",
+      "DriverKit": "22"
+    }
+  }
+]

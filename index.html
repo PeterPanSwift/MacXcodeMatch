@@ -139,6 +139,42 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
+        .pill-group {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .pill-button {
+            border: 2px solid rgba(30, 64, 175, 0.6);
+            background: rgba(13, 27, 62, 0.85);
+            color: #e5edff;
+            padding: 0.65rem 1.4rem;
+            border-radius: 999px;
+            cursor: pointer;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            letter-spacing: 0.01em;
+        }
+
+        .pill-button:hover {
+            border-color: rgba(99, 102, 241, 0.9);
+            color: #ffffff;
+        }
+
+        .pill-button.active {
+            background: linear-gradient(135deg, #4f7dff 0%, #3355d8 100%);
+            color: #ffffff;
+            border-color: transparent;
+            box-shadow: 0 6px 16px rgba(79, 125, 255, 0.35);
+        }
+
+        .pill-button:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(79, 125, 255, 0.4);
+        }
+
         /* Button */
         .btn {
             width: 100%;
@@ -387,14 +423,17 @@
         <!-- Main card -->
         <div class="card">
             <div class="selection-group">
-                <label for="macTypeSelect">💻 Select Mac Type</label>
-                <select id="macTypeSelect" onchange="updateYearOptions()">
-                    <option value="">Choose a Mac type...</option>
-                    <option value="MacBook Air">MacBook Air</option>
-                    <option value="MacBook Pro">MacBook Pro</option>
-                    <option value="iMac">iMac</option>
-                    <option value="Mac Mini">Mac Mini</option>
-                </select>
+                <label>💻 Select Mac Type</label>
+                <div class="pill-group" id="macTypeGroup">
+                    <button type="button" class="pill-button" data-mac-type="MacBook Air"
+                        onclick="setMacType('MacBook Air')" aria-pressed="false">MacBook Air</button>
+                    <button type="button" class="pill-button" data-mac-type="MacBook Pro"
+                        onclick="setMacType('MacBook Pro')" aria-pressed="false">MacBook Pro</button>
+                    <button type="button" class="pill-button" data-mac-type="iMac" onclick="setMacType('iMac')"
+                        aria-pressed="false">iMac</button>
+                    <button type="button" class="pill-button" data-mac-type="Mac Mini" onclick="setMacType('Mac Mini')"
+                        aria-pressed="false">Mac Mini</button>
+                </div>
             </div>
 
             <div class="selection-group">
@@ -434,6 +473,7 @@
     <script>
         let macOSData = [];
         let xcodeData = [];
+        let selectedMacType = '';
 
         // Mac configurations (newest to oldest)
         const macConfigs = {
@@ -460,19 +500,18 @@
 
         // Update year options based on selected Mac type
         function updateYearOptions() {
-            const macType = document.getElementById('macTypeSelect').value;
             const yearSelect = document.getElementById('macYearSelect');
 
-            // Clear previous options
             yearSelect.innerHTML = '<option value="">Choose a year/chip...</option>';
+            yearSelect.value = '';
 
-            if (!macType) {
+            if (!selectedMacType) {
                 yearSelect.disabled = true;
                 return;
             }
 
-            yearSelect.disabled = false;
-            const years = macConfigs[macType] || [];
+            const years = macConfigs[selectedMacType] || [];
+            yearSelect.disabled = years.length === 0;
 
             years.forEach(year => {
                 const option = document.createElement('option');
@@ -480,6 +519,43 @@
                 option.textContent = year;
                 yearSelect.appendChild(option);
             });
+        }
+
+        function setMacType(macType, options = {}) {
+            const force = options.force === true;
+            const isAlreadySelected = selectedMacType === macType;
+            const shouldClear = isAlreadySelected && !force;
+
+            selectedMacType = shouldClear ? '' : macType;
+
+            const buttons = document.querySelectorAll('#macTypeGroup .pill-button');
+            buttons.forEach(btn => {
+                const isActive = selectedMacType && btn.dataset.macType === selectedMacType;
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
+
+            updateYearOptions();
+
+            const yearSelect = document.getElementById('macYearSelect');
+            if (!force) {
+                yearSelect.value = '';
+            }
+        }
+
+        function applyDefaults() {
+            setMacType('MacBook Pro', { force: true });
+
+            const yearSelect = document.getElementById('macYearSelect');
+            if (!yearSelect.disabled) {
+                yearSelect.value = 'M5';
+            }
+
+            const xcodeSelect = document.getElementById('xcodeSelect');
+            const hasDefaultXcode = Array.from(xcodeSelect.options).some(opt => opt.value === '26.1');
+            if (hasDefaultXcode) {
+                xcodeSelect.value = '26.1';
+            }
         }
 
         // Convert user selection to match JSON format
@@ -506,6 +582,7 @@
                 xcodeData = await xcodeResponse.json();
 
                 populateSelects();
+                applyDefaults();
             } catch (error) {
                 console.error('Failed to load data:', error);
                 alert('Unable to load data. Please ensure JSON files exist.');
@@ -721,7 +798,7 @@
 
         // Check compatibility
         function checkCompatibility() {
-            const macType = document.getElementById('macTypeSelect').value;
+            const macType = selectedMacType;
             const macYear = document.getElementById('macYearSelect').value;
             const xcodeVersion = document.getElementById('xcodeSelect').value;
             const macOSVersionInput = document.getElementById('macOSVersionInput').value.trim();
@@ -1161,6 +1238,7 @@
 
         // Initialize
         createStars();
+        applyDefaults();
         loadData();
     </script>
 </body>

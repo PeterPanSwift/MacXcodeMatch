@@ -538,7 +538,19 @@
             updateYearOptions();
 
             const yearSelect = document.getElementById('macYearSelect');
-            if (!force) {
+            if (!selectedMacType) {
+                yearSelect.value = '';
+                return;
+            }
+
+            if (force) {
+                return;
+            }
+
+            const firstSelectableOption = Array.from(yearSelect.options).find(option => option.value);
+            if (firstSelectableOption) {
+                yearSelect.value = firstSelectableOption.value;
+            } else {
                 yearSelect.value = '';
             }
         }

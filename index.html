@@ -551,7 +551,7 @@
         function compareVersions(v1, v2) {
             // Validate inputs
             if (!v1 || !v2) return 0;
-            
+
             // Convert version numbers to arrays for comparison
             const parts1 = v1.replace('x', '99').split('.').map(Number);
             const parts2 = v2.replace('x', '99').split('.').map(Number);
@@ -568,7 +568,7 @@
         function isVersionInRange(macOS, xcodeRequirement) {
             // Validate inputs
             if (!macOS || !xcodeRequirement) return false;
-            
+
             const req = parseVersion(xcodeRequirement);
             if (!req) return false;
 
@@ -958,10 +958,20 @@
                                 <strong>💡 Solution:</strong> Your ${macModel} supports macOS ${userMacOSVersion}. You can use Xcode ${recommendedXcode} instead!
                             </p>`;
                         } else {
-                            // Mac hardware is too old
-                            alternativeMessage = `<p style="color: #78350f; margin: 0.75rem 0 0 0; line-height: 1.6; background: rgba(254, 243, 199, 0.3); padding: 0.75rem; border-radius: 8px;">
-                                <strong>💡 Alternative:</strong> Your ${macModel} supports up to macOS ${maxSupportedMacOS}. You can use Xcode ${recommendedXcode} instead!
-                            </p>`;
+                            // Mac hardware is too old - show both alternatives
+                            alternativeMessage = `
+                                <div style="margin-top: 1rem;">
+                                    <div style="background: rgba(254, 243, 199, 0.5); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                            <span style="font-size: 1.3rem;">�</span>
+                                            <strong style="color: #92400e; font-size: 1.05rem;">Option 1: Use Compatible Versions</strong>
+                                        </div>
+                                        <p style="color: #78350f; margin: 0; line-height: 1.6;">
+                                            Your ${macModel} supports up to <strong>macOS ${maxSupportedMacOS}</strong>. You can use <strong>Xcode ${recommendedXcode}</strong> with this macOS version.
+                                        </p>
+                                    </div>
+                                </div>
+                            `;
                         }
                     }
 
@@ -1029,9 +1039,13 @@
                     let purchaseRecommendation = '';
                     if (!isUserMacOSTooNew) {
                         purchaseRecommendation = `
-                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(127, 29, 29, 0.2);">
-                                <p style="color: #7f1d1d; margin: 0 0 0.5rem 0; line-height: 1.6;">
-                                    <strong>🛍️ Recommendation:</strong> Consider getting a newer Mac to access the latest Xcode features!
+                            <div style="background: rgba(254, 243, 199, 0.5); padding: 1rem; border-radius: 8px;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                    <span style="font-size: 1.3rem;">🛍️</span>
+                                    <strong style="color: #92400e; font-size: 1.05rem;">Option 2: Get a Newer Mac</strong>
+                                </div>
+                                <p style="color: #78350f; margin: 0 0 0.75rem 0; line-height: 1.6;">
+                                    To use the latest Xcode ${xcode.xcode_version} and access all new features, consider upgrading to a newer Mac:
                                 </p>
                                 ${compatibleMacsHTML}
                             </div>
